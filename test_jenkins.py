@@ -1,1 +1,1 @@
-echo "this file will be executed by Jenkins."
+print("this file will be executed by Jenkins.")
