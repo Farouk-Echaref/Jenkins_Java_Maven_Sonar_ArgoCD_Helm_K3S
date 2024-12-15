@@ -38,7 +38,7 @@ pipeline {
       steps {
         sh 'ls -ltr'
         // create a JAR file and build the docker image
-        sh 'mvn clean package'
+        sh 'cd App_CI_Repo && mvn clean package'
       //   script {
       //       // Declare and initialize `app` inside the script block
       //           def app = docker.build("${DOCKER_IMAGE}")
@@ -50,7 +50,7 @@ pipeline {
     }
     stage('Static Code Analysis') {
       environment {
-        SONAR_URL = "http://34.201.116.83:9000"
+        SONAR_URL = "http://localhost:9000"
       }
       steps {
         withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {
