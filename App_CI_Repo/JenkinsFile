@@ -1,0 +1,97 @@
+pipeline {
+  // in case i want to use a docker agent
+  // agent {
+  //   docker {
+  //     image '' // specify image, in most cases DevOps Engineers need to write the Dockerfile for this image
+  //     args '--user root -v /var/run/docker.sock:/var/run/docker.sock' // mount Docker socket to access the host's Docker daemon
+  //   }
+  // }
+  agent {
+      node {
+          label 'my-host-agent' // Use the label assigned in the configuration
+      }
+  }
+
+  triggers {
+        pollSCM '*/1 * * * *'
+  }
+
+  environment {
+        DOCKER_IMAGE = 'faroukcha69/Jenkins_Java_CI'
+  }
+
+  stages {
+    // stage('Checkout') {
+    //   steps {
+    //     sh 'echo passed'
+    //     //git branch: 'main', url: '' // you can pass the git repo here
+    //   }
+    // }
+
+    stage('Clone repository') {
+            steps {
+                checkout scm
+            }
+        }
+
+    stage('Build and Test') {
+      steps {
+        sh 'ls -ltr'
+        // create a JAR file and build the docker image
+        sh 'mvn clean package'
+        script {
+            // Declare and initialize `app` inside the script block
+                def app = docker.build("${DOCKER_IMAGE}")
+                    
+                    // Save `app` for use in later stages by using a global environment variable
+                    env.DOCKER_IMAGE_ID = app.imageName()
+                }
+      }
+    }
+    stage('Static Code Analysis') {
+      environment {
+        SONAR_URL = "http://34.201.116.83:9000"
+      }
+      steps {
+        withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {
+          sh 'cd java-maven-sonar-argocd-helm-k8s/spring-boot-app && mvn sonar:sonar -Dsonar.login=$SONAR_AUTH_TOKEN -Dsonar.host.url=${SONAR_URL}'
+        }
+      }
+    }
+    stage('Build and Push Docker Image') {
+      environment {
+        DOCKER_IMAGE = "_:${BUILD_NUMBER}"
+        // DOCKERFILE_LOCATION = "java-maven-sonar-argocd-helm-k8s/spring-boot-app/Dockerfile"
+        REGISTRY_CREDENTIALS = credentials('docker-cred')
+      }
+      steps {
+        script {
+            sh 'cd java-maven-sonar-argocd-helm-k8s/spring-boot-app && docker build -t ${DOCKER_IMAGE} .'
+            def dockerImage = docker.image("${DOCKER_IMAGE}")
+            docker.withRegistry('https://index.docker.io/v1/', "docker-cred") {
+                dockerImage.push()
+            }
+        }
+      }
+    }
+    stage('Update Deployment File') {
+        environment {
+            GIT_REPO_NAME = ""
+            GIT_USER_NAME = ""
+        }
+        steps {
+            withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+                sh '''
+                    git config user.email ""
+                    git config user.name ""
+                    BUILD_NUMBER=${BUILD_NUMBER}
+                    sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" java-maven-sonar-argocd-helm-k8s/spring-boot-app-manifests/deployment.yml
+                    git add java-maven-sonar-argocd-helm-k8s/spring-boot-app-manifests/deployment.yml
+                    git commit -m "Update deployment image to version ${BUILD_NUMBER}"
+                    git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+                '''
+            }
+        }
+    }
+  }
+}
