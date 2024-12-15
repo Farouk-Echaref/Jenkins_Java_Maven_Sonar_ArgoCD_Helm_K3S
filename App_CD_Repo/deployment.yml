@@ -1,0 +1,21 @@
+appVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: jv_app_deploy
+  labels:
+    app: jv_app_deploy
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: jv_app_deploy
+  template:
+    metadata:
+      labels:
+        app: jv_app_deploy
+    spec:
+      containers:
+      - name: jv_app_deploy
+        image: image_from_dockerhub
+        ports:
+        - containerPort: 8080
