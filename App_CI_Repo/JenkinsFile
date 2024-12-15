@@ -39,14 +39,14 @@ pipeline {
         sh 'ls -ltr'
         // create a JAR file and build the docker image
         sh 'mvn clean package'
-        script {
-            // Declare and initialize `app` inside the script block
-                def app = docker.build("${DOCKER_IMAGE}")
+      //   script {
+      //       // Declare and initialize `app` inside the script block
+      //           def app = docker.build("${DOCKER_IMAGE}")
                     
-                    // Save `app` for use in later stages by using a global environment variable
-                    env.DOCKER_IMAGE_ID = app.imageName()
-                }
-      }
+      //               // Save `app` for use in later stages by using a global environment variable
+      //               env.DOCKER_IMAGE_ID = app.imageName()
+      //           }
+      // }
     }
     stage('Static Code Analysis') {
       environment {
