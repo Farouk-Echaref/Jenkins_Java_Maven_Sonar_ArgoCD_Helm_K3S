@@ -13,6 +13,8 @@ Prerequisites:
    -  Helm package manager
    -  Argo CD
 
+![alt text](sonar-development-workflow.webp)
+
 Steps:
 
     1. Install the necessary Jenkins plugins:
