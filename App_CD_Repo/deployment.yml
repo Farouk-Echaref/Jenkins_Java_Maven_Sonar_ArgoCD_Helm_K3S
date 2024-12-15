@@ -1,21 +1,39 @@
-appVersion: apps/v1
-kind: Deployment 
+# API version for the resource. 'apps/v1' is used for Deployments in modern Kubernetes versions.
+appVersion: apps/v1  
+
+# Specifies that this resource is a Deployment.
+kind: Deployment  
+
+# Metadata provides information about the resource.
 metadata:
-  name: jv-app-deploy
+  # Name of the Deployment. It must be unique within the namespace.
+  name: jv-app-deploy  
+
+  # Labels are key-value pairs used for identifying and grouping resources.
   labels:
-    app: jv-app-deploy
+    app: jv-app-deploy  # Label to identify this Deployment.
+
+# Specifies the desired state of the Deployment.
 spec:
-  replicas: 3
+  # Number of replicas (Pods) that should run.
+  replicas: 3  
+
+  # Selector defines the label used to identify the Pods managed by this Deployment.
   selector:
     matchLabels:
-      app: jv-app-deploy
+      app: jv-app-deploy  # This must match the labels in the Pod template.
+
+  # Template defines the Pod specification for the replicas.
   template:
     metadata:
+      # Labels applied to Pods created by this Deployment.
       labels:
-        app: jv-app-deploy
+        app: jv-app-deploy  # Must match the selector labels.
+
     spec:
+      # Specifies the container(s) for the Pod.
       containers:
-      - name: jv-app-deploy
-        image: image-from-dockerhub
+      - name: jv-app-deploy            # Name of the container (should match the app for clarity).
+        image: image-from-dockerhub    # The container image to use, pulled from Docker Hub.
         ports:
-        - containerPort: 8080
+        - containerPort: 8080          # The container's port that listens for traffic.
