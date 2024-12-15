@@ -46,7 +46,7 @@ pipeline {
       //               // Save `app` for use in later stages by using a global environment variable
       //               env.DOCKER_IMAGE_ID = app.imageName()
       //           }
-      // }
+      }
     }
     stage('Static Code Analysis') {
       environment {
