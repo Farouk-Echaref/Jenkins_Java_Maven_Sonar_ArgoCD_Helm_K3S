@@ -82,11 +82,11 @@ pipeline {
         steps {
             withCredentials([usernamePassword(credentialsId: "${GIT_CREDENTIALS_ID}", passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
                 sh '''
-                    git config user.email "farouk.echcharef20@gmail.com"
+                    git config user.email "farouk.echcharef@usmba.ac.ma"
                     git config user.name "Farouk-Echaref"
 
                     # Attach HEAD to the master branch
-                    git checkout master
+                    git pull https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${GIT_USERNAME}/${GIT_REPO_NAME} master
 
                     echo $PWD
                     BUILD_NUMBER=${BUILD_NUMBER}
