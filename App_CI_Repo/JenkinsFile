@@ -13,7 +13,7 @@ pipeline {
   }
 
   triggers {
-        pollSCM '*/1 * * * *'
+    pollSCM '*/1 * * * *'
   }
 
   // environment {
@@ -29,25 +29,26 @@ pipeline {
     // }
 
     stage('Clone repository') {
-            steps {
-                checkout scm
-            }
-        }
+      steps {
+        checkout scm
+      }
+    }
 
     stage('Build and Test') {
       steps {
         sh 'ls -ltr'
         // create a JAR file and build the docker image
         sh 'cd App_CI_Repo && mvn clean package'
-      //   script {
-      //       // Declare and initialize `app` inside the script block
-      //           def app = docker.build("${DOCKER_IMAGE}")
+        //   script {
+        //       // Declare and initialize `app` inside the script block
+        //           def app = docker.build("${DOCKER_IMAGE}")
                     
-      //               // Save `app` for use in later stages by using a global environment variable
-      //               env.DOCKER_IMAGE_ID = app.imageName()
-      //           }
+        //               // Save `app` for use in later stages by using a global environment variable
+        //               env.DOCKER_IMAGE_ID = app.imageName()
+        //           }
       }
     }
+
     stage('Static Code Analysis') {
       environment {
         SONAR_URL = "http://localhost:9000"
@@ -58,6 +59,7 @@ pipeline {
         }
       }
     }
+
     stage('Build and Push Docker Image') {
       environment {
         DOCKER_IMAGE = "faroukcha69/jenkins_java_ci:${BUILD_NUMBER}"
@@ -66,62 +68,66 @@ pipeline {
       }
       steps {
         script {
-            sh 'cd App_CI_Repo && docker build -t ${DOCKER_IMAGE} .'
-            def dockerImage = docker.image("${DOCKER_IMAGE}")
-            docker.withRegistry('https://registry.hub.docker.com', 'dockerhub') {
-                dockerImage.push()
-            }
+          sh 'cd App_CI_Repo && docker build -t ${DOCKER_IMAGE} .'
+          def dockerImage = docker.image("${DOCKER_IMAGE}")
+          docker.withRegistry('https://registry.hub.docker.com', 'dockerhub') {
+            dockerImage.push()
+          }
         }
       }
     }
+
     stage('Update Deployment File') {
       environment {
-          GIT_REPO_NAME = "Jenkins_Java_Maven_Sonar_ArgoCD_Helm_K3S"
-          GIT_CREDENTIALS_ID = 'github' // ID for GitHub credentials
+        GIT_REPO_NAME = "Jenkins_Java_Maven_Sonar_ArgoCD_Helm_K3S"
+        GIT_CREDENTIALS_ID = 'github' // ID for GitHub credentials
       }
       steps {
-          withCredentials([usernamePassword(credentialsId: "${GIT_CREDENTIALS_ID}", passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-              sh '''
-                  git config user.email "farouk.echcharef@usmba.ac.ma"
-                  git config user.name "Farouk-Echaref"
+        withCredentials([usernamePassword(credentialsId: "${GIT_CREDENTIALS_ID}", passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+          sh '''
+            git config user.email "farouk.echcharef@usmba.ac.ma"
+            git config user.name "Farouk-Echaref"
 
-                  # Ensure we are on the master branch
-                  git checkout master || git checkout -b master
+            # Ensure we are on the master branch
+            git checkout master || git checkout -b master
 
-                  # Pull latest changes
-                  git pull --ff-only https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${GIT_USERNAME}/${GIT_REPO_NAME} master
+            # Pull latest changes
+            # git pull --ff-only https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${GIT_USERNAME}/${GIT_REPO_NAME} master
 
-                  # Update deployment file
-                  sed -i 's+faroukcha69/jenkins_java_ci.*+faroukcha69/jenkins_java_ci:${BUILD_NUMBER}+g' App_CD_Repo/deployment.yml
-                  git add App_CD_Repo/deployment.yml
+            # Update deployment file
+            cat App_CD_Repo/deployment.yml
+            sed -i 's|faroukcha69/jenkins_java_ci.*|faroukcha69/jenkins_java_ci:${BUILD_NUMBER}|g' App_CD_Repo/deployment.yml
+            cat App_CD_Repo/deployment.yml
+            git add App_CD_Repo/deployment.yml
 
-                  # Commit and push changes
-                  git commit -m "Update deployment image to version ${BUILD_NUMBER}"
-                  git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${GIT_USERNAME}/${GIT_REPO_NAME} HEAD:master
-              '''
-          }
+            # Commit and push changes
+            git commit -m "Update deployment image to version ${BUILD_NUMBER}"
+            git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/${GIT_USERNAME}/${GIT_REPO_NAME} HEAD:master
+          '''
+        }
       }
+    }
   }
 
   post {
-        always {
-            echo 'Pipeline completed.'
-        }
-
-        success {
-            echo 'Pipeline succeeded!'
-        }
-
-        failure {
-            echo 'Pipeline failed!'
-        }
-
-        // Uncomment this section if you want to include cleanup logic
-        // cleanup {
-        //     script {
-        //         // Optional cleanup logic, e.g., remove unused Docker images
-        //         sh 'docker image prune -f'
-        //     }
-        // }
+    always {
+      echo 'Pipeline completed.'
     }
+
+    success {
+      echo 'Pipeline succeeded!'
+    }
+
+    failure {
+      echo 'Pipeline failed!'
+    }
+
+    // Uncomment this section if you want to include cleanup logic
+    // cleanup {
+    //     script {
+    //         // Optional cleanup logic, e.g., remove unused Docker images
+    //         sh 'docker image prune -f'
+    //     }
+    // }
+  }
 }
