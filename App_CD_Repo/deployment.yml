@@ -34,6 +34,6 @@ spec:
       # Specifies the container(s) for the Pod.
       containers:
       - name: jv-app-deploy            # Name of the container (should match the app for clarity).
-        image: faroukcha69/Jenkins_Java_CI:latest    # The container image to use, pulled from Docker Hub.
+        image: faroukcha69/jenkins_java_ci:latest    # The container image to use, pulled from Docker Hub.
         ports:
         - containerPort: 8080          # The container's port that listens for traffic.
