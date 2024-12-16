@@ -1,5 +1,5 @@
 # Version of the application (not a standard Kubernetes field, custom use)
-appVersion: v1  
+apiVersion: v1  
 
 # Resource type is a Service
 kind: Service
