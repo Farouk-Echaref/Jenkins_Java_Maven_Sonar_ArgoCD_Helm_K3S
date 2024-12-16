@@ -1,5 +1,5 @@
 # API version for the resource. 'apps/v1' is used for Deployments in modern Kubernetes versions.
-appVersion: apps/v1  
+apiVersion: apps/v1  
 
 # Specifies that this resource is a Deployment.
 kind: Deployment  
